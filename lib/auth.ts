@@ -17,30 +17,35 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required")
         }
 
-        await connectToDatabase()
+        try {
+          await connectToDatabase()
 
-        // Find user by email
-        const user = await User.findOne({ email: credentials.email })
+          // Find user by email
+          const user = await User.findOne({ email: credentials.email })
 
-        if (!user) {
-          throw new Error("No user found with this email")
-        }
+          if (!user) {
+            throw new Error("No user found with this email")
+          }
 
-        // Check if password matches
-        const isPasswordValid = await user.comparePassword(credentials.password)
+          // Check if password matches
+          const isPasswordValid = await user.comparePassword(credentials.password)
 
-        if (!isPasswordValid) {
-          throw new Error("Invalid password")
-        }
+          if (!isPasswordValid) {
+            throw new Error("Invalid password")
+          }
 
-        // Return user object without password
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          ecoLevel: user.ecoLevel,
-          joinDate: user.joinDate,
-          impactStats: user.impactStats,
+          // Return user object without password
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            ecoLevel: user.ecoLevel,
+            joinDate: user.joinDate,
+            impactStats: user.impactStats,
+          }
+        } catch (error) {
+          console.error("Authorization error:", error)
+          return null
         }
       },
     }),
@@ -75,4 +80,5 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 }

@@ -1,28 +1,44 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Leaf } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Leaf, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const { toast } = useToast()
 
+  // Check for error in URL parameters
+  useEffect(() => {
+    const errorParam = searchParams.get("error")
+    if (errorParam) {
+      if (errorParam === "CredentialsSignin") {
+        setError("Invalid email or password. Please try again.")
+      } else {
+        setError(`Authentication error: ${errorParam}`)
+      }
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setIsLoading(true)
 
     try {
@@ -33,6 +49,7 @@ export default function Login() {
       })
 
       if (result?.error) {
+        setError(result.error)
         toast({
           title: "Login Failed",
           description: result.error,
@@ -51,6 +68,7 @@ export default function Login() {
       router.push(callbackUrl)
     } catch (error) {
       console.error("Login error:", error)
+      setError("An unexpected error occurred. Please try again.")
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred. Please try again.",
@@ -72,8 +90,18 @@ export default function Login() {
         </div>
 
         <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Sign In</CardTitle>
+            <CardDescription>Enter your credentials to access your account</CardDescription>
+          </CardHeader>
+
           <form onSubmit={handleSubmit}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4">
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
@@ -84,6 +112,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -99,13 +128,23 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
               </div>
             </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </CardFooter>
           </form>
         </Card>
 

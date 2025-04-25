@@ -1,8 +1,12 @@
 import type React from "react"
-import type { Metadata } from "next/metadata"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import ClientLayout from "./page"
+import { Providers } from "./providers"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import Navigation from "@/components/navigation"
+import SocketInitializer from "@/components/socket-initializer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -18,8 +22,19 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.className}>
-      <ClientLayout children={children} />
+    <html lang="en" className={inter.className} suppressHydrationWarning>
+      <body>
+        <Providers>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <div className="flex min-h-screen flex-col">
+              <Navigation />
+              <SocketInitializer />
+              <main className="flex-1">{children}</main>
+            </div>
+            <Toaster />
+          </ThemeProvider>
+        </Providers>
+      </body>
     </html>
   )
 }

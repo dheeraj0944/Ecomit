@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { Leaf, Menu, ShoppingCart, BarChart3, User, LogOut } from "lucide-react"
+import { Leaf, Menu, ShoppingCart, BarChart3, User, LogOut, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -21,6 +21,12 @@ export default function Navigation() {
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Fix hydration issues
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const routes = [
     {
@@ -44,6 +50,9 @@ export default function Navigation() {
     await signOut({ callbackUrl: "/" })
   }
 
+  // Don't render navigation until client-side hydration is complete
+  if (!mounted) return null
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -54,23 +63,28 @@ export default function Navigation() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 text-sm">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium transition-colors hover:text-green-600",
-                pathname === route.href ? "text-green-600" : "text-muted-foreground",
-              )}
-            >
-              <route.icon className="h-4 w-4" />
-              {route.name}
-            </Link>
-          ))}
+          {status === "authenticated" &&
+            routes.map((route) => (
+              <Link
+                key={route.href}
+                href={route.href}
+                className={cn(
+                  "flex items-center gap-2 text-sm font-medium transition-colors hover:text-green-600",
+                  pathname === route.href ? "text-green-600" : "text-muted-foreground",
+                )}
+              >
+                <route.icon className="h-4 w-4" />
+                {route.name}
+              </Link>
+            ))}
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          {status === "authenticated" && session?.user ? (
+          {status === "loading" ? (
+            <Button variant="ghost" size="icon" disabled>
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </Button>
+          ) : status === "authenticated" && session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -135,20 +149,21 @@ export default function Navigation() {
                 </Link>
               </div>
               <nav className="flex flex-col gap-4 px-7 mt-10">
-                {routes.map((route) => (
-                  <Link
-                    key={route.href}
-                    href={route.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-2 text-base font-medium transition-colors hover:text-green-600",
-                      pathname === route.href ? "text-green-600" : "text-muted-foreground",
-                    )}
-                  >
-                    <route.icon className="h-5 w-5" />
-                    {route.name}
-                  </Link>
-                ))}
+                {status === "authenticated" &&
+                  routes.map((route) => (
+                    <Link
+                      key={route.href}
+                      href={route.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2 text-base font-medium transition-colors hover:text-green-600",
+                        pathname === route.href ? "text-green-600" : "text-muted-foreground",
+                      )}
+                    >
+                      <route.icon className="h-5 w-5" />
+                      {route.name}
+                    </Link>
+                  ))}
                 <div className="h-px bg-border my-4" />
                 {status !== "authenticated" ? (
                   <>

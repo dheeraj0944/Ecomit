@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,22 +9,32 @@ import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Leaf } from "lucide-react"
+import { Leaf, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function Signup() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setIsLoading(true)
+
+    if (!termsAccepted) {
+      setError("You must accept the Terms of Service and Privacy Policy")
+      setIsLoading(false)
+      return
+    }
 
     try {
       // Register the user
@@ -72,6 +83,7 @@ export default function Signup() {
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Registration error:", error)
+      setError(error.message || "An unexpected error occurred. Please try again.")
       toast({
         title: "Registration Failed",
         description: error.message || "An unexpected error occurred. Please try again.",
@@ -94,8 +106,19 @@ export default function Signup() {
         </div>
 
         <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Sign Up</CardTitle>
+            <CardDescription>Create your EcoMit account to start tracking your environmental impact</CardDescription>
+          </CardHeader>
+
           <form onSubmit={handleSubmit}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4">
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
@@ -106,6 +129,7 @@ export default function Signup() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -117,6 +141,7 @@ export default function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -127,10 +152,16 @@ export default function Signup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="terms" required />
+                  <Checkbox
+                    id="terms"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                    disabled={isLoading}
+                  />
                   <Label htmlFor="terms" className="text-sm">
                     I agree to the{" "}
                     <Link href="/terms" className="text-green-600 hover:text-green-700">
@@ -142,11 +173,21 @@ export default function Signup() {
                     </Link>
                   </Label>
                 </div>
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Create Account"}
-                </Button>
               </div>
             </CardContent>
+
+            <CardFooter>
+              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </CardFooter>
           </form>
         </Card>
 
