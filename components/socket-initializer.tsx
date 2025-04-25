@@ -2,28 +2,53 @@
 
 import { useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { io, Socket } from "socket.io-client"
+
+let socket: Socket | null = null
 
 export default function SocketInitializer() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
-    // Only initialize Socket.IO if the user is authenticated
-    if (status === "authenticated") {
-      // Initialize Socket.IO server
-      fetch("/api/socket/init")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            console.log("Socket.IO server initialized")
-          } else {
-            console.error("Failed to initialize Socket.IO server:", data.message)
-          }
-        })
-        .catch((error) => {
-          console.error("Error initializing Socket.IO server:", error)
-        })
+    if (status === "authenticated" && session?.user) {
+      console.log("Initializing Socket.IO client...")
+
+      // Initialize Socket.IO client
+      socket = io(process.env.NEXTAUTH_URL || "http://localhost:3000", {
+        path: "/api/socket",
+        auth: {
+          token: session.user.id,
+        },
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      })
+
+      socket.on("connect", () => {
+        console.log("Socket.IO client connected")
+      })
+
+      socket.on("disconnect", () => {
+        console.log("Socket.IO client disconnected")
+      })
+
+      socket.on("error", (error) => {
+        console.error("Socket.IO error:", error)
+      })
+
+      socket.on("connect_error", (error) => {
+        console.error("Socket.IO connection error:", error)
+      })
+
+      return () => {
+        if (socket) {
+          socket.disconnect()
+          socket = null
+        }
+      }
     }
-  }, [status])
+  }, [status, session])
 
   return null
 }

@@ -13,15 +13,20 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("Attempting to authorize user:", credentials?.email)
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials")
           throw new Error("Email and password are required")
         }
 
         try {
           await connectToDatabase()
+          console.log("Database connected successfully")
 
           // Find user by email
           const user = await User.findOne({ email: credentials.email })
+          console.log("User found:", user ? "Yes" : "No")
 
           if (!user) {
             throw new Error("No user found with this email")
@@ -29,13 +34,14 @@ export const authOptions: NextAuthOptions = {
 
           // Check if password matches
           const isPasswordValid = await user.comparePassword(credentials.password)
+          console.log("Password valid:", isPasswordValid)
 
           if (!isPasswordValid) {
             throw new Error("Invalid password")
           }
 
           // Return user object without password
-          return {
+          const userData = {
             id: user._id.toString(),
             name: user.name,
             email: user.email,
@@ -43,15 +49,18 @@ export const authOptions: NextAuthOptions = {
             joinDate: user.joinDate,
             impactStats: user.impactStats,
           }
+          console.log("User authorized successfully:", userData.email)
+          return userData
         } catch (error) {
           console.error("Authorization error:", error)
-          return null
+          throw error
         }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
+      console.log("JWT callback - User:", user ? "Present" : "Not present")
       if (user) {
         token.id = user.id
         token.ecoLevel = user.ecoLevel
@@ -61,6 +70,7 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
+      console.log("Session callback - Token:", token ? "Present" : "Not present")
       if (token) {
         session.user.id = token.id as string
         session.user.ecoLevel = token.ecoLevel as string
@@ -80,5 +90,24 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // Enable debug mode
+  events: {
+    async signIn({ user }) {
+      console.log("Sign in successful for user:", user.email)
+    },
+    async session({ session }) {
+      console.log("Session created/updated:", session.user?.email)
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  }
 }

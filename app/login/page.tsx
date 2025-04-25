@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +23,7 @@ export default function Login() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const { toast } = useToast()
+  const { data: session, status } = useSession()
 
   // Check for error in URL parameters
   useEffect(() => {
@@ -36,17 +37,30 @@ export default function Login() {
     }
   }, [searchParams])
 
+  // Handle session status
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      console.log("User authenticated, redirecting to:", callbackUrl)
+      router.push(callbackUrl)
+    }
+  }, [status, session, callbackUrl, router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
+    console.log("Attempting to sign in with:", email)
 
     try {
+      // First, try to sign in
       const result = await signIn("credentials", {
         redirect: false,
         email,
         password,
+        callbackUrl,
       })
+
+      console.log("Sign in result:", result)
 
       if (result?.error) {
         setError(result.error)
@@ -59,13 +73,51 @@ export default function Login() {
         return
       }
 
-      // Successful login
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to EcoMit!",
-      })
+      // If sign in was successful, wait a moment for the session to be established
+      if (result?.ok) {
+        console.log("Login successful, waiting for session...")
+        
+        // Wait for a short time to allow session to be established
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Try to get the session
+        try {
+          const response = await fetch("/api/auth/session", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            cache: "no-store",
+          })
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          
+          const data = await response.json()
+          console.log("Session data:", data)
+          
+          if (data.session?.user) {
+            console.log("Session confirmed, redirecting to:", callbackUrl)
+            router.push(callbackUrl)
+            return
+          }
+        } catch (error) {
+          console.error("Session check error:", error)
+        }
 
-      router.push(callbackUrl)
+        // If we get here, the session check failed
+        console.error("Failed to establish session")
+        setError("Failed to establish session. Please try again.")
+        toast({
+          title: "Session Error",
+          description: "Failed to establish session. Please try again.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
     } catch (error) {
       console.error("Login error:", error)
       setError("An unexpected error occurred. Please try again.")
@@ -112,29 +164,22 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700">
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={isLoading}
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -148,12 +193,12 @@ export default function Login() {
           </form>
         </Card>
 
-        <div className="text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-green-600 hover:text-green-700">
+        <p className="px-8 text-center text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
             Sign up
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   )
