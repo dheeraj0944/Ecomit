@@ -156,7 +156,7 @@ export default function Home() {
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
               <Link href="/signup" prefetch={false}>
                 <Button size="lg" className="bg-white text-green-600 hover:bg-green-50">
-                  Create an Account <ArrowRight className="ml-2 h-4 w-4" />
+                  Create an Account here<ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
