@@ -7,8 +7,9 @@ import { signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { Leaf, Menu, ShoppingCart, BarChart3, User, LogOut, Loader2 } from "lucide-react"
+import { Leaf, Menu, ShoppingCart, BarChart3, User, LogOut, Loader2, Trophy, Gift, Camera, Recycle } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+interface NavItem {
+  href: string;
+  icon: any;
+  name?: string;
+  label?: string;
+}
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -28,7 +36,7 @@ export default function Navigation() {
     setMounted(true)
   }, [])
 
-  const routes = [
+  const routes: NavItem[] = [
     {
       name: "Dashboard",
       href: "/dashboard",
@@ -53,147 +61,123 @@ export default function Navigation() {
   // Don't render navigation until client-side hydration is complete
   if (!mounted) return null
 
+  const navItems: NavItem[] = [
+    ...routes,
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+    { href: "/vouchers", label: "Vouchers", icon: Gift },
+    { href: "/greenscan", label: "GreenScan", icon: Camera },
+  ]
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="flex items-center gap-2 mr-6">
-          <Leaf className="h-6 w-6 text-green-600" />
-          <span className="text-xl font-bold">EcoMit</span>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6 text-sm">
-          {status === "authenticated" &&
-            routes.map((route) => (
-              <Link
-                key={route.href}
-                href={route.href}
-                className={cn(
-                  "flex items-center gap-2 text-sm font-medium transition-colors hover:text-green-600",
-                  pathname === route.href ? "text-green-600" : "text-muted-foreground",
-                )}
-              >
-                <route.icon className="h-4 w-4" />
-                {route.name}
-              </Link>
-            ))}
-        </nav>
-
-        <div className="flex flex-1 items-center justify-end gap-2">
-          {status === "loading" ? (
-            <Button variant="ghost" size="icon" disabled>
-              <Loader2 className="h-5 w-5 animate-spin" />
-            </Button>
-          ) : status === "authenticated" && session?.user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-green-100 text-green-800">
-                      {session.user.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{session.user.name}</p>
-                    <p className="text-xs text-muted-foreground">{session.user.email}</p>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="hidden md:flex gap-2">
-              <Button asChild variant="ghost">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href="/signup">Sign up</Link>
-              </Button>
-            </div>
-          )}
-
-          {/* Mobile Menu Trigger */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="pr-0">
-              <div className="px-7">
-                <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                  <Leaf className="h-6 w-6 text-green-600" />
-                  <span className="text-xl font-bold">EcoMit</span>
-                </Link>
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <div className="relative w-8 h-8">
+              <div className="absolute inset-0 bg-green-600 rounded-full flex items-center justify-center">
+                <Recycle className="h-5 w-5 text-white animate-spin-slow" />
               </div>
-              <nav className="flex flex-col gap-4 px-7 mt-10">
-                {status === "authenticated" &&
-                  routes.map((route) => (
-                    <Link
-                      key={route.href}
-                      href={route.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-2 text-base font-medium transition-colors hover:text-green-600",
-                        pathname === route.href ? "text-green-600" : "text-muted-foreground",
-                      )}
-                    >
-                      <route.icon className="h-5 w-5" />
-                      {route.name}
-                    </Link>
-                  ))}
-                <div className="h-px bg-border my-4" />
-                {status !== "authenticated" ? (
-                  <>
-                    <Button asChild variant="outline" className="w-full justify-center">
-                      <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                        Log in
-                      </Link>
-                    </Button>
-                    <Button asChild className="w-full justify-center bg-green-600 hover:bg-green-700">
-                      <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                        Sign up
-                      </Link>
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center"
-                    onClick={() => {
-                      handleSignOut()
-                      setMobileMenuOpen(false)
-                    }}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+              <div className="absolute inset-0 border-2 border-green-600 rounded-full animate-pulse"></div>
+            </div>
+            <span className="hidden font-bold sm:inline-block text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              EcoMit
+            </span>
+          </Link>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "transition-colors hover:text-foreground/80",
+                    isActive ? "text-foreground" : "text-foreground/60"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    {item.name || item.label}
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Add your search component here if needed */}
+          </div>
+          <nav className="flex items-center">
+            {status === "loading" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : session ? (
+              <>
+                <ThemeToggle />
+                <Link href="/cart">
+                  <Button variant="ghost" size="icon">
+                    <ShoppingCart className="h-5 w-5" />
                   </Button>
-                )}
-              </nav>
-            </SheetContent>
-          </Sheet>
+                </Link>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-2">
+                        <Avatar>
+                          <AvatarFallback>
+                            {session.user?.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{session.user?.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {session.user?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {navItems.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className={cn(
+                                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+                                isActive ? "bg-accent" : "transparent"
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {item.name || item.label}
+                            </Link>
+                          );
+                        })}
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-2"
+                          onClick={() => signOut()}
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </>
+            ) : (
+              <Link href="/login">
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+            )}
+          </nav>
         </div>
       </div>
     </header>

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="#f0fdf4" stroke="#22c55e" stroke-width="4" />
+  
+  <!-- Recycling symbol -->
+  <g transform="translate(100, 100)">
+    <!-- Outer recycling arrows -->
+    <path d="M-60,-20 C-60,-40 -40,-60 -20,-60 C0,-60 20,-40 20,-20 C20,0 0,20 -20,20 C-40,20 -60,0 -60,-20 Z" 
+          fill="none" 
+          stroke="#22c55e" 
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-dasharray="0 1000"
+          stroke-dashoffset="1000">
+      <animate attributeName="stroke-dashoffset" 
+               from="1000" 
+               to="0" 
+               dur="2s" 
+               fill="freeze" />
+    </path>
+    
+    <!-- Middle recycling arrows -->
+    <path d="M-40,0 C-40,-20 -20,-40 0,-40 C20,-40 40,-20 40,0 C40,20 20,40 0,40 C-20,40 -40,20 -40,0 Z" 
+          fill="none" 
+          stroke="#22c55e" 
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-dasharray="0 1000"
+          stroke-dashoffset="1000">
+      <animate attributeName="stroke-dashoffset" 
+               from="1000" 
+               to="0" 
+               dur="2s" 
+               begin="0.5s"
+               fill="freeze" />
+    </path>
+    
+    <!-- Inner recycling arrows -->
+    <path d="M-20,20 C-20,0 0,-20 20,-20 C40,-20 60,0 60,20 C60,40 40,60 20,60 C0,60 -20,40 -20,20 Z" 
+          fill="none" 
+          stroke="#22c55e" 
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-dasharray="0 1000"
+          stroke-dashoffset="1000">
+      <animate attributeName="stroke-dashoffset" 
+               from="1000" 
+               to="0" 
+               dur="2s" 
+               begin="1s"
+               fill="freeze" />
+    </path>
+    
+    <!-- Rotating leaf in the center -->
+    <g transform="rotate(0)">
+      <path d="M-15,0 C-15,-10 -5,-15 0,-15 C5,-15 15,-10 15,0 C15,10 5,15 0,15 C-5,15 -15,10 -15,0 Z" 
+            fill="#22c55e" 
+            opacity="0">
+        <animate attributeName="opacity" 
+                 from="0" 
+                 to="1" 
+                 dur="0.5s" 
+                 begin="2s"
+                 fill="freeze" />
+      </path>
+      <path d="M0,-15 L5,-5 L0,5 L-5,-5 Z" 
+            fill="#16a34a" 
+            opacity="0">
+        <animate attributeName="opacity" 
+                 from="0" 
+                 to="1" 
+                 dur="0.5s" 
+                 begin="2s"
+                 fill="freeze" />
+      </path>
+      <animateTransform attributeName="transform" 
+                        attributeType="XML" 
+                        type="rotate" 
+                        from="0" 
+                        to="360" 
+                        dur="10s" 
+                        begin="2.5s"
+                        repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- EcoMit text -->
+  <text x="100" y="160" 
+        font-family="Arial, sans-serif" 
+        font-size="24" 
+        font-weight="bold" 
+        text-anchor="middle" 
+        fill="#22c55e" 
+        opacity="0">
+    <animate attributeName="opacity" 
+             from="0" 
+             to="1" 
+             dur="0.5s" 
+             begin="2s"
+             fill="freeze" />
+    EcoMit
+  </text>
+</svg> 

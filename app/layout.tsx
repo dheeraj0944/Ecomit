@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import Navigation from "@/components/navigation"
 import SocketInitializer from "@/components/socket-initializer"
+import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -30,6 +31,7 @@ export default function RootLayout({
               <Navigation />
               <SocketInitializer />
               <main className="flex-1">{children}</main>
+              <Footer />
             </div>
             <Toaster />
           </ThemeProvider>

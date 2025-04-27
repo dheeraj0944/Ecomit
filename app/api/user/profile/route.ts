@@ -8,23 +8,39 @@ import User from "@/models/user"
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
+    console.log("Session in GET /api/user/profile:", session)
 
-    if (!session || !session.user) {
+    if (!session?.user?.email) {
+      console.log("No session or email found")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id
-
     await connectToDatabase()
+    console.log("Connected to database")
 
-    // Find user and exclude password
-    const user = await User.findById(userId).select("-password")
+    // Find user by email and exclude password
+    const user = await User.findOne({ email: session.user.email }).select("-password")
+    console.log("Found user:", user ? "Yes" : "No")
 
     if (!user) {
+      console.log("User not found in database")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json(user)
+    // Convert MongoDB document to plain object
+    const userData = {
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      ecoLevel: user.ecoLevel,
+      joinDate: user.joinDate,
+      impactStats: user.impactStats,
+      badges: user.badges,
+    }
+
+    console.log("Returning user data:", userData)
+    return NextResponse.json(userData)
   } catch (error: any) {
     console.error("Error fetching user profile:", error)
     return NextResponse.json({ error: error.message || "Failed to fetch user profile" }, { status: 500 })
@@ -35,13 +51,14 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
+    console.log("Session in PUT /api/user/profile:", session)
 
-    if (!session || !session.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = session.user.id
     const updateData = await req.json()
+    console.log("Update data:", updateData)
 
     // Fields that are allowed to be updated
     const allowedFields = ["name", "ecoPreferences", "notificationSettings"]
@@ -60,9 +77,9 @@ export async function PUT(req: NextRequest) {
 
     await connectToDatabase()
 
-    // Update user
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
+    // Update user by email
+    const updatedUser = await User.findOneAndUpdate(
+      { email: session.user.email },
       { $set: filteredData },
       { new: true, runValidators: true },
     ).select("-password")
@@ -71,6 +88,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
+    console.log("User updated successfully")
     return NextResponse.json(updatedUser)
   } catch (error: any) {
     console.error("Error updating user profile:", error)

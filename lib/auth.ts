@@ -41,16 +41,15 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Return user object without password
-          const userData = {
+          return {
             id: user._id.toString(),
             name: user.name,
             email: user.email,
             ecoLevel: user.ecoLevel,
             joinDate: user.joinDate,
             impactStats: user.impactStats,
+            badges: user.badges,
           }
-          console.log("User authorized successfully:", userData.email)
-          return userData
         } catch (error) {
           console.error("Authorization error:", error)
           throw error
@@ -58,24 +57,32 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   callbacks: {
     async jwt({ token, user }) {
-      console.log("JWT callback - User:", user ? "Present" : "Not present")
       if (user) {
         token.id = user.id
+        token.name = user.name
+        token.email = user.email
         token.ecoLevel = user.ecoLevel
         token.joinDate = user.joinDate
         token.impactStats = user.impactStats
+        token.badges = user.badges
       }
       return token
     },
     async session({ session, token }) {
-      console.log("Session callback - Token:", token ? "Present" : "Not present")
       if (token) {
-        session.user.id = token.id as string
-        session.user.ecoLevel = token.ecoLevel as string
-        session.user.joinDate = token.joinDate as Date
-        session.user.impactStats = token.impactStats as IUser["impactStats"]
+        session.user.id = token.id
+        session.user.name = token.name
+        session.user.email = token.email
+        session.user.ecoLevel = token.ecoLevel
+        session.user.joinDate = token.joinDate
+        session.user.impactStats = token.impactStats
+        session.user.badges = token.badges
       }
       return session
     },
@@ -85,12 +92,8 @@ export const authOptions: NextAuthOptions = {
     signOut: "/",
     error: "/login",
   },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // Enable debug mode
+  debug: process.env.NODE_ENV === "development",
   events: {
     async signIn({ user }) {
       console.log("Sign in successful for user:", user.email)

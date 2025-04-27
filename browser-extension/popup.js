@@ -138,12 +138,12 @@ function renderImpactInfo(cartData) {
     return
   }
 
-  // Mock impact data - in a real extension, this would come from the API
+  // Mock impact data with realistic values
   const impact = {
-    carbon: Math.random() * 10 * cartData.items.length,
-    plastic: Math.random() * 0.5 * cartData.items.length,
-    water: Math.random() * 1000 * cartData.items.length,
-    ecoScore: Math.floor(Math.random() * 100),
+    carbon: Math.random() * 2 * cartData.items.length, // 0-2 kg CO2 per item
+    plastic: Math.random() * 0.2 * cartData.items.length, // 0-0.2 kg plastic per item
+    water: Math.random() * 50 * cartData.items.length, // 0-50 liters water per item
+    ecoScore: Math.floor(Math.random() * 40) + 30, // 30-70 eco score
   }
 
   impactInfoEl.innerHTML = `
