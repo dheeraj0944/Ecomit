@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Leaf, AlertTriangle, Droplet, Wind, TreePine, Trophy, Target, Clock, ShoppingBag, Chrome } from "lucide-react"
+import { Leaf, AlertTriangle, Droplet, Wind, TreePine, Trophy, Target, Clock, ShoppingBag } from "lucide-react"
 import { ImpactChart } from "@/components/impact-chart"
 import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
