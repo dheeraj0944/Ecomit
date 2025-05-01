@@ -133,7 +133,7 @@ const cartItems = [
         id: 201,
         name: "Organic Cotton T-Shirt",
         price: 999,
-        ecoScore: 90,
+        ecoScore: 95,
         image: "https://images.pexels.com/photos/6311251/pexels-photo-6311251.jpeg?auto=compress&cs=tinysrgb&w=600",
         savings: {
           carbon: "30%",
